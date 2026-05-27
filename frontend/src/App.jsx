@@ -225,9 +225,9 @@ function App() {
             <>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-3xl font-bold">{meta.titulo}</h2>
+                  <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">{meta.titulo}</h2>
                   {meta.subtitulo && (
-                    <p className="text-gray-500 mt-1">{meta.subtitulo}</p>
+                    <p className="text-gray-500 mt-1 font-medium">{meta.subtitulo}</p>
                   )}
                 </div>
 
@@ -237,8 +237,11 @@ function App() {
                   <button
                     type="button"
                     onClick={handleNuevoContacto}
-                    className="bg-[#111827] text-white px-5 py-3 rounded-xl font-medium hover:opacity-90 transition"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
                   >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
                     Nuevo contacto
                   </button>
                 </div>
