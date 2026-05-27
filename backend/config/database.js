@@ -16,6 +16,10 @@ const config = process.env.DATABASE_URL
 
 const pool = new Pool(config)
 
+pool.on('connect', (client) => {
+  client.query('SET search_path TO public;');
+})
+
 pool.connect((err) => {
   if (err) {
     console.error('Error conectando a la base de datos:', err.message)
