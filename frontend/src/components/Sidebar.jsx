@@ -10,13 +10,8 @@ const VISTAS = [
 function Sidebar({ vistaActiva, onNavigate }) {
   return (
     <aside className="w-64 h-screen bg-[#0B0F19] border-r border-[#1F2937] p-6 flex-shrink-0 sticky top-0 text-white shadow-2xl flex flex-col">
-      <div className="flex items-center gap-3 mb-10">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+      <div className="mb-10">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
           Konnex
         </h1>
       </div>
