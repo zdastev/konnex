@@ -43,17 +43,6 @@ function Sidebar({ vistaActiva, onNavigate }) {
         })}
       </nav>
       
-      <div className="mt-auto pt-6 border-t border-[#1F2937]">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center overflow-hidden">
-            <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-gray-200">Admin</div>
-            <div className="text-xs text-gray-500">Plan Pro</div>
-          </div>
-        </div>
-      </div>
     </aside>
   )
 }
