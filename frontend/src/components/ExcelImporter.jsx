@@ -31,18 +31,25 @@ export default function ExcelImporter({ onImported }) {
 
       let creados = 0
       for (const row of json) {
-        // Buscamos columnas comunes por si las nombran diferente
-        const nombre = row['Nombre'] || row['nombre'] || row['Nombre del negocio'] || row['Negocio']
-        const whatsapp = row['WhatsApp'] || row['whatsapp'] || row['Telefono'] || row['telefono'] || row['Celular']
-        const ubicacion = row['Ubicacion'] || row['Ubicación'] || row['ubicacion'] || row['Direccion']
+        const keys = Object.keys(row)
+        const findKey = (words) => keys.find(k => words.some(w => k.toLowerCase().includes(w)))
         
-        // Detectar página web
-        const webRaw = row['Web'] || row['Página Web'] || row['Pagina Web'] || row['Tiene Web'] || row['Website'] || ''
+        const nombreKey = findKey(['nombre', 'negocio', 'restaurante', 'empresa'])
+        const nombre = nombreKey ? row[nombreKey] : null
+
+        const wpKey = findKey(['whatsapp', 'teléfono', 'telefono', 'cel', 'movil'])
+        const whatsapp = wpKey ? row[wpKey] : null
+
+        const ubKey = findKey(['ubicación', 'ubicacion', 'dirección', 'direccion'])
+        const ubicacion = ubKey ? row[ubKey] : null
+
+        const webKey = findKey(['web', 'website', 'página', 'pagina'])
+        const webRaw = webKey ? row[webKey] : ''
         const webStr = String(webRaw).toLowerCase().trim()
         const tieneWeb = webStr === 'si' || webStr === 'sí' || webStr === 'true' || webStr === '1' || webStr.includes('http') || webStr.includes('www')
 
-        // Detectar y procesar Categoría
-        const catRaw = row['Categoria'] || row['Categoría'] || row['categoria'] || row['Giro'] || ''
+        const catKey = findKey(['categoría', 'categoria', 'giro'])
+        const catRaw = catKey ? row[catKey] : ''
         const catStr = String(catRaw).trim()
         let finalCatId = null
 
