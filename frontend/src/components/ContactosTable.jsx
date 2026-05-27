@@ -93,11 +93,17 @@ function ContactosTable({
                   <td className="p-4 text-gray-600">{contacto.ubicacion}</td>
                   <td className="p-4">
                     {contacto.tiene_web ? (
-                      <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
-                        Tiene web
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Sí tiene
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                         No tiene
                       </span>
                     )}
