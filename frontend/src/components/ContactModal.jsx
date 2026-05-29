@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { createContacto, updateContacto, fetchCategorias } from '../services/api'
+import { createContacto, updateContacto, fetchCategorias, fetchProductosByCategoria, fetchEstadosByContacto, upsertEstado } from '../services/api'
 
 function ContactModal({ open, onClose, onCreated, contacto }) {
   const [categorias, setCategorias] = useState([])
+  const [productosCategoria, setProductosCategoria] = useState([])
+  const [productosSeleccionados, setProductosSeleccionados] = useState([])
 
   const emptyForm = {
     nombre_negocio: '',
@@ -13,13 +15,11 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
   }
 
   const [formData, setFormData] = useState(emptyForm)
-
   const modoEdicion = !!contacto
 
   useEffect(() => {
     if (open) {
       loadCategorias()
-
       if (contacto) {
         setFormData({
           nombre_negocio: contacto.nombre_negocio || '',
@@ -28,8 +28,13 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
           categoria_id: contacto.categoria_id || '',
           tiene_web: contacto.tiene_web || false
         })
+        if (contacto.categoria_id) {
+          loadProductosCategoria(contacto.categoria_id, contacto.id)
+        }
       } else {
         setFormData(emptyForm)
+        setProductosCategoria([])
+        setProductosSeleccionados([])
       }
     }
   }, [open, contacto])
@@ -43,24 +48,57 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
     }
   }
 
+  const loadProductosCategoria = async (categoria_id, contacto_id = null) => {
+    try {
+      const productos = await fetchProductosByCategoria(categoria_id)
+      setProductosCategoria(productos)
+      if (contacto_id) {
+        const estados = await fetchEstadosByContacto(contacto_id)
+        setProductosSeleccionados(estados.map(e => e.producto_id))
+      } else {
+        setProductosSeleccionados(productos.map(p => p.id))
+      }
+    } catch (error) {
+      console.error(error)
+      setProductosCategoria([])
+      setProductosSeleccionados([])
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    if (name === 'categoria_id' && value) {
+      loadProductosCategoria(value)
+    } else if (name === 'categoria_id' && !value) {
+      setProductosCategoria([])
+      setProductosSeleccionados([])
+    }
+  }
+
+  const toggleProducto = (id) => {
+    setProductosSeleccionados(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    )
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       if (modoEdicion) {
+        // Edición: actualizar contacto + sincronizar estados manualmente
         await updateContacto(contacto.id, formData)
+        for (const producto_id of productosSeleccionados) {
+          await upsertEstado({ contacto_id: contacto.id, producto_id, estado: 'sin_contactar' })
+        }
       } else {
-        await createContacto(formData)
+        // Creación: enviar todo al backend en una sola llamada
+        await createContacto({ ...formData, producto_ids: productosSeleccionados })
       }
 
       setFormData(emptyForm)
+      setProductosCategoria([])
+      setProductosSeleccionados([])
       onCreated()
       onClose()
     } catch (error) {
@@ -73,15 +111,13 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-xl rounded-2xl p-8">
+      <div className="bg-white w-full max-w-xl rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
 
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">
             {modoEdicion ? 'Editar contacto' : 'Nuevo contacto'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-black">
-            ✕
-          </button>
+          <button onClick={onClose} className="text-gray-500 hover:text-black">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -130,13 +166,35 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
               className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-gray-300"
             >
               <option value="">Selecciona una categoría</option>
-              {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nombre}
-                </option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
           </div>
+
+          {productosCategoria.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Productos que necesita esta empresa
+              </label>
+              <div className="space-y-2">
+                {productosCategoria.map(p => (
+                  <label key={p.id} className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    <input
+                      type="checkbox"
+                      checked={productosSeleccionados.includes(p.id)}
+                      onChange={() => toggleProducto(p.id)}
+                      className="w-4 h-4 accent-black"
+                    />
+                    <span className="text-sm font-medium">{p.nombre}</span>
+                  </label>
+                ))}
+              </div>
+              {productosSeleccionados.length === 0 && (
+                <p className="text-xs text-red-500 mt-1">Selecciona al menos un producto</p>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center gap-3">
             <input
@@ -151,7 +209,8 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
 
           <button
             type="submit"
-            className="w-full bg-[#111827] text-white py-3 rounded-xl font-medium hover:opacity-90 transition"
+            disabled={productosCategoria.length > 0 && productosSeleccionados.length === 0}
+            className="w-full bg-[#111827] text-white py-3 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-40"
           >
             {modoEdicion ? 'Guardar cambios' : 'Guardar contacto'}
           </button>

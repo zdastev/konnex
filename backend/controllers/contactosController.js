@@ -92,17 +92,40 @@ const getContactoById = async (req, res) => {
 }
 
 const createContacto = async (req, res) => {
-  const { nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id } = req.body
+  const { nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id, producto_ids } = req.body
   if (!nombre_negocio) return res.status(400).json({ error: 'El nombre del negocio es obligatorio' })
+  
+  const client = await pool.connect()
   try {
-    const result = await pool.query(
+    await client.query('BEGIN')
+
+    const result = await client.query(
       `INSERT INTO contactos (nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id, usuario_id)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [nombre_negocio, whatsapp, ubicacion, tiene_web || false, categoria_id, req.user.id]
     )
+
+    const contactoId = result.rows[0].id
+
+    // Crear estados iniciales para los productos seleccionados
+    if (producto_ids && producto_ids.length > 0) {
+      for (const producto_id of producto_ids) {
+        await client.query(
+          `INSERT INTO estados_contacto (contacto_id, producto_id, estado, usuario_id, updated_at)
+           VALUES ($1, $2, 'sin_contactar', $3, NOW())
+           ON CONFLICT (contacto_id, producto_id) DO NOTHING`,
+          [contactoId, producto_id, req.user.id]
+        )
+      }
+    }
+
+    await client.query('COMMIT')
     res.status(201).json(result.rows[0])
   } catch (err) {
+    await client.query('ROLLBACK')
     res.status(500).json({ error: err.message })
+  } finally {
+    client.release()
   }
 }
 
