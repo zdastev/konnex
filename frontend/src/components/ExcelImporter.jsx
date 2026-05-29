@@ -43,10 +43,17 @@ export default function ExcelImporter({ onImported }) {
         const ubKey = findKey(['ubicación', 'ubicacion', 'dirección', 'direccion'])
         const ubicacion = ubKey ? row[ubKey] : null
 
-        const webKey = findKey(['web', 'website', 'página', 'pagina'])
+        const webKey = findKey(['web', 'website', 'página', 'pagina', 'url', 'link', 'facebook', 'instagram', 'red social'])
         const webRaw = webKey ? row[webKey] : ''
         const webStr = String(webRaw).toLowerCase().trim()
-        const tieneWeb = webStr === 'si' || webStr === 'sí' || webStr === 'true' || webStr === '1' || webStr.includes('http') || webStr.includes('www')
+
+        // También buscar URLs en CUALQUIER columna del Excel
+        const tieneUrlEnAlgunaColumna = Object.values(row).some(val => {
+          const v = String(val).toLowerCase().trim()
+          return v.includes('http') || v.includes('www.') || v.includes('.com') || v.includes('.es') || v.includes('.net') || v.includes('.mx')
+        })
+
+        const tieneWeb = tieneUrlEnAlgunaColumna || webStr === 'si' || webStr === 'sí' || webStr === 'true' || webStr === '1'
 
         const catKey = findKey(['categoría', 'categoria', 'giro'])
         const catRaw = catKey ? row[catKey] : ''
