@@ -98,11 +98,12 @@ export default function KanbanView() {
       const isRestaurante = catNombre.includes('restaurant') || catNombre.includes('comida') || catNombre.includes('bar') || catNombre.includes('cafe') || catNombre.includes('gastronom')
       
       if (isRestaurante) {
-        mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Vi su restaurante y me encantaría ayudarles a digitalizar su menú con un código QR interactivo.`
-        if (!contacto.tiene_web) {
-          mensaje += ` Además, noté que no cuentan con página web, también podemos hacerles una para atraer más clientes. ¿Tendrán unos minutos para platicar?`
+        if (contacto.tiene_web) {
+          // Ya tiene web → solo ofrecemos carta QR
+          mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Vi su restaurante y me encantaría ayudarles a digitalizar su carta con un menú QR interactivo para que sus clientes pidan desde el móvil. ¿Tendrán unos minutos para platicar?`
         } else {
-          mensaje += ` ¿Tendrán unos minutos para platicar sobre esto?`
+          // No tiene web → carta QR + web
+          mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Vi su restaurante y me encantaría ayudarles a digitalizar su carta con un menú QR interactivo. Además, noté que no cuentan con página web — también podemos crearles una profesional para atraer más clientes. ¿Tendrán unos minutos para platicar?`
         }
       } else {
         mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Me encantaría ofrecerles nuestro sistema de agendamiento de citas para simplificar sus reservas.`
