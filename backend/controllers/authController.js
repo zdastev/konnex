@@ -26,7 +26,7 @@ const register = async (req, res) => {
     res.status(201).json({ token, user })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Error en el servidor' })
+    res.status(500).json({ error: `Error en el servidor: ${err.message}`, stack: err.stack })
   }
 }
 
@@ -46,12 +46,16 @@ const login = async (req, res) => {
     if (!valida)
       return res.status(401).json({ error: 'Credenciales incorrectas' })
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET no está configurado en el entorno')
+    }
+
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' })
 
     res.json({ token, user: { id: user.id, nombre: user.nombre, email: user.email } })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Error en el servidor' })
+    res.status(500).json({ error: `Error en el servidor: ${err.message}`, stack: err.stack })
   }
 }
 
