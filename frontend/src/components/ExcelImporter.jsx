@@ -12,7 +12,6 @@ export default function ExcelImporter({ onImported }) {
 
     setImporting(true)
     try {
-      // 1. Obtener categorías actuales de la BD
       let categoriasDB = []
       try {
         categoriasDB = await fetchCategorias()
@@ -25,8 +24,6 @@ export default function ExcelImporter({ onImported }) {
       
       const firstSheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[firstSheetName]
-      
-      // Convertimos a JSON. Esperamos que la primera fila tenga los títulos.
       const json = XLSX.utils.sheet_to_json(worksheet)
 
       let creados = 0
@@ -47,7 +44,6 @@ export default function ExcelImporter({ onImported }) {
         const webRaw = webKey ? row[webKey] : ''
         const webStr = String(webRaw).toLowerCase().trim()
 
-        // También buscar URLs en CUALQUIER columna del Excel
         const tieneUrlEnAlgunaColumna = Object.values(row).some(val => {
           const v = String(val).toLowerCase().trim()
           return v.includes('http') || v.includes('www.') || v.includes('.com') || v.includes('.es') || v.includes('.net') || v.includes('.mx')
@@ -61,16 +57,13 @@ export default function ExcelImporter({ onImported }) {
         let finalCatId = null
 
         if (catStr) {
-          // Buscar si ya existe (ignorando mayúsculas/minúsculas)
           let catExistente = categoriasDB.find(c => c.nombre.toLowerCase() === catStr.toLowerCase())
-          
           if (catExistente) {
             finalCatId = catExistente.id
           } else {
-            // Si no existe, la creamos en la base de datos
             try {
               const nuevaCat = await createCategoria({ nombre: catStr })
-              categoriasDB.push(nuevaCat) // Guardamos en memoria para no volver a crearla en la siguiente fila
+              categoriasDB.push(nuevaCat)
               finalCatId = nuevaCat.id
             } catch (err) {
               console.error(`Error creando categoría ${catStr}:`, err)
@@ -80,7 +73,7 @@ export default function ExcelImporter({ onImported }) {
 
         if (nombre) {
           try {
-            await upsertContacto({
+            await createContacto({   // <-- ESTE ERA EL BUG, antes decía upsertContacto
               nombre_negocio: String(nombre),
               whatsapp: whatsapp ? String(whatsapp) : null,
               ubicacion: ubicacion ? String(ubicacion) : null,
