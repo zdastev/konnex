@@ -96,8 +96,8 @@ const createContacto = async (req, res) => {
   if (!nombre_negocio) return res.status(400).json({ error: 'El nombre del negocio es obligatorio' })
   try {
     const result = await pool.query(
-      `INSERT INTO contactos (nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      `INSERT INTO contactos (nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id, usuario_id)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [nombre_negocio, whatsapp, ubicacion, tiene_web || false, categoria_id, req.user.id]
     )
     res.status(201).json(result.rows[0])

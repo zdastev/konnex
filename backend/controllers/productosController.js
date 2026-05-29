@@ -83,9 +83,9 @@ const getProductos = async (req, res) => {
         FROM categoria_productos cp
         INNER JOIN productos p 
           ON cp.producto_id = p.id
-        WHERE cp.categoria_id = $1
+        WHERE cp.categoria_id = $1 AND p.usuario_id = $2
         ORDER BY p.created_at ASC
-      `, [categoria_id])
+      `, [categoria_id, req.user.id])
 
       return res.json(result.rows)
     }
@@ -94,8 +94,9 @@ const getProductos = async (req, res) => {
     const result = await pool.query(`
       SELECT * 
       FROM productos
+      WHERE usuario_id = $1
       ORDER BY created_at ASC
-    `)
+    `, [req.user.id])
 
     res.json(result.rows)
 
@@ -113,8 +114,8 @@ const createProducto = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'INSERT INTO productos (nombre, descripcion) VALUES ($1, $2) RETURNING *',
-      [nombre, descripcion]
+      'INSERT INTO productos (nombre, descripcion, usuario_id) VALUES ($1, $2, $3) RETURNING *',
+      [nombre, descripcion, req.user.id]
     )
 
     res.status(201).json(result.rows[0])
@@ -131,8 +132,8 @@ const updateProducto = async (req, res) => {
   try {
 
     const result = await pool.query(
-      'UPDATE productos SET nombre = $1, descripcion = $2 WHERE id = $3 RETURNING *',
-      [nombre, descripcion, id]
+      'UPDATE productos SET nombre = $1, descripcion = $2 WHERE id = $3 AND usuario_id = $4 RETURNING *',
+      [nombre, descripcion, id, req.user.id]
     )
 
     if (result.rows.length === 0) {
@@ -152,8 +153,8 @@ const deleteProducto = async (req, res) => {
   try {
 
     await pool.query(
-      'DELETE FROM productos WHERE id = $1',
-      [id]
+      'DELETE FROM productos WHERE id = $1 AND usuario_id = $2',
+      [id, req.user.id]
     )
 
     res.json({ message: 'Producto eliminado' })

@@ -14,8 +14,8 @@ const createCategoria = async (req, res) => {
   if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' })
   try {
     const result = await pool.query(
-      'INSERT INTO categorias (nombre, descripcion) VALUES ($1, $2) RETURNING *',
-      [nombre, descripcion]
+      'INSERT INTO categorias (nombre, descripcion, usuario_id) VALUES ($1, $2, $3) RETURNING *',
+      [nombre, descripcion, req.user.id]
     )
     res.status(201).json(result.rows[0])
   } catch (err) {
@@ -28,8 +28,8 @@ const updateCategoria = async (req, res) => {
   const { nombre, descripcion } = req.body
   try {
     const result = await pool.query(
-      'UPDATE categorias SET nombre = $1, descripcion = $2 WHERE id = $3 RETURNING *',
-      [nombre, descripcion, id]
+      'UPDATE categorias SET nombre = $1, descripcion = $2 WHERE id = $3 AND usuario_id = $4 RETURNING *',
+      [nombre, descripcion, id, req.user.id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Categoría no encontrada' })
     res.json(result.rows[0])
