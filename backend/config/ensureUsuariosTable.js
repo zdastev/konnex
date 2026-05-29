@@ -15,6 +15,10 @@ const ensureUsuariosTable = async () => {
     ALTER TABLE productos ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE;
     ALTER TABLE estados_contacto ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE;
     ALTER TABLE seguimientos_agenda ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE;
+
+    ALTER TABLE estados_contacto DROP CONSTRAINT IF EXISTS estados_contacto_estado_check;
+    ALTER TABLE estados_contacto ADD CONSTRAINT estados_contacto_estado_check
+      CHECK (estado IN ('interesado', 'no_interesa', 'pensandolo', 'sin_contactar', 'contactado'));
   `)
 }
 

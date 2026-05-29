@@ -30,7 +30,7 @@ const upsertEstado = async (req, res) => {
     return res.status(400).json({ error: 'contacto_id y producto_id son obligatorios' })
   }
 
-  const estadosValidos = ['interesado', 'no_interesa', 'pensandolo', 'sin_contactar']
+  const estadosValidos = ['interesado', 'no_interesa', 'pensandolo', 'sin_contactar', 'contactado']
   if (estado && !estadosValidos.includes(estado)) {
     return res.status(400).json({ error: 'Estado no válido' })
   }

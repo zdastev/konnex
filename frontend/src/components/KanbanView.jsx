@@ -3,6 +3,7 @@ import { fetchProductos, fetchKanbanBoard, upsertEstado } from '../services/api'
 
 const ESTADO_LABELS = {
   sin_contactar: 'Sin contactar',
+  contactado: 'Ya le escribí',
   interesado: 'Interesado',
   pensandolo: 'Pensándolo',
   no_interesa: 'No interesa'
@@ -10,9 +11,26 @@ const ESTADO_LABELS = {
 
 const ESTADO_BG = {
   sin_contactar: 'bg-gray-100',
+  contactado: 'bg-blue-100',
   interesado: 'bg-green-100',
   pensandolo: 'bg-yellow-100',
   no_interesa: 'bg-red-100'
+}
+
+const ESTADO_BORDER = {
+  sin_contactar: 'border-gray-300',
+  contactado: 'border-blue-300',
+  interesado: 'border-green-300',
+  pensandolo: 'border-yellow-300',
+  no_interesa: 'border-red-300'
+}
+
+const ESTADO_HEADER = {
+  sin_contactar: 'text-gray-700',
+  contactado: 'text-blue-700',
+  interesado: 'text-green-700',
+  pensandolo: 'text-yellow-700',
+  no_interesa: 'text-red-700'
 }
 
 export default function KanbanView() {
@@ -131,12 +149,12 @@ export default function KanbanView() {
             return (
               <div 
                 key={estadoKey} 
-                className={`flex-1 min-w-[280px] rounded-2xl p-4 flex flex-col ${ESTADO_BG[estadoKey]}`}
+                className={`flex-1 min-w-[260px] rounded-2xl p-4 flex flex-col border ${ESTADO_BG[estadoKey]} ${ESTADO_BORDER[estadoKey]}`}
                 onDragOver={onDragOver}
                 onDrop={(e) => onDrop(e, estadoKey)}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-800">{label}</h3>
+                  <h3 className={`font-bold ${ESTADO_HEADER[estadoKey]}`}>{label}</h3>
                   <span className="bg-white rounded-full px-2 py-1 text-xs font-semibold shadow-sm text-gray-600">
                     {columna.length}
                   </span>
@@ -151,14 +169,24 @@ export default function KanbanView() {
                       className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing hover:shadow-md transition"
                     >
                       <h4 className="font-semibold text-gray-900">{c.nombre_negocio}</h4>
+                      {c.categoria_nombre && (
+                        <span className="text-xs text-gray-400 block mt-0.5">{c.categoria_nombre}</span>
+                      )}
                       {c.whatsapp && (
                         <a 
-                          href={getWhatsAppLink(c, estadoKey)} 
-                          target="_blank" 
+                          href={getWhatsAppLink(c, estadoKey)}
+                          target="_blank"
                           rel="noreferrer"
-                          className="text-xs text-blue-500 hover:underline mt-1 inline-block"
+                          onClick={() => {
+                            if (estadoKey === 'sin_contactar') {
+                              upsertEstado({ contacto_id: c.contacto_id, producto_id: productoId, estado: 'contactado' })
+                                .then(() => setBoard(prev => prev.map(x => x.contacto_id === c.contacto_id ? { ...x, estado: 'contactado' } : x)))
+                                .catch(console.error)
+                            }
+                          }}
+                          className="flex items-center gap-1 text-xs text-blue-500 hover:underline mt-2"
                         >
-                          {c.whatsapp}
+                          <span>📱</span> {c.whatsapp}
                         </a>
                       )}
                     </div>
