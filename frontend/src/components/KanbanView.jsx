@@ -70,7 +70,6 @@ export default function KanbanView() {
 
     if (estado_actual === nuevo_estado) return
 
-    // Update optimistic UI
     setBoard(prev => prev.map(c => 
       c.contacto_id == contacto_id ? { ...c, estado: nuevo_estado } : c
     ))
@@ -80,11 +79,26 @@ export default function KanbanView() {
     } catch (error) {
       console.error(error)
       alert("Error al actualizar el estado")
-      // Revertir (idealmente se hace un fetchKanbanBoard)
     }
   }
 
-  const getColumna = (estado) => board.filter(c => c.estado === estado)
+  const getProductoNombre = () => {
+    const p = productos.find(p => p.id == productoId)
+    return p ? p.nombre.toLowerCase() : ''
+  }
+
+  const getBoardFiltrado = () => {
+    const nombre = getProductoNombre()
+    if (nombre.includes('página web') || nombre.includes('pagina web')) {
+      return board.filter(c => !c.tiene_web)
+    }
+    if (nombre.includes('qr') || nombre.includes('menú digital') || nombre.includes('menu digital')) {
+      return board.filter(c => c.tiene_web)
+    }
+    return board
+  }
+
+  const getColumna = (estado) => getBoardFiltrado().filter(c => c.estado === estado)
 
   const getWhatsAppLink = (contacto, estado) => {
     const numero = contacto.whatsapp.replace(/\D/g, '')
@@ -99,10 +113,8 @@ export default function KanbanView() {
       
       if (isRestaurante) {
         if (contacto.tiene_web) {
-          // Ya tiene web → solo ofrecemos carta QR
           mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Vi su restaurante y me encantaría ayudarles a digitalizar su carta con un menú QR interactivo para que sus clientes pidan desde el móvil. ¿Tendrán unos minutos para platicar?`
         } else {
-          // No tiene web → carta QR + web
           mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Vi su restaurante y me encantaría ayudarles a digitalizar su carta con un menú QR interactivo. Además, noté que no cuentan con página web — también podemos crearles una profesional para atraer más clientes. ¿Tendrán unos minutos para platicar?`
         }
       } else {
@@ -114,7 +126,6 @@ export default function KanbanView() {
         }
       }
     } else {
-      // Seguimiento normal
       mensaje = `Hola ${contacto.nombre_negocio}, soy Steven. Te escribo para dar seguimiento a nuestra plática sobre ${nombreProducto}. ¿Cómo estás?`
     }
     
