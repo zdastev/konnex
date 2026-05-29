@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
-import { upsertContacto, fetchCategorias, createCategoria } from '../services/api'
+import { createContacto, fetchCategorias, createCategoria } from '../services/api'
 
 export default function ExcelImporter({ onImported }) {
   const fileInputRef = useRef(null)
