@@ -90,13 +90,30 @@ const getProductos = async (req, res) => {
       return res.json(result.rows)
     }
 
-    // Si no viene categoría -> traer todos
-    const result = await pool.query(`
+    let result = await pool.query(`
       SELECT * 
       FROM productos
       WHERE usuario_id = $1
       ORDER BY created_at ASC
     `, [req.user.id])
+
+    if (result.rows.length === 0) {
+      // Auto-crear productos base para el usuario nuevo
+      await pool.query(
+        `INSERT INTO productos (nombre, descripcion, usuario_id) VALUES 
+        ('Página Web', 'Diseño y desarrollo web', $1),
+        ('Agendamiento de Citas', 'Sistema de reservas online', $1),
+        ('Menú Digital QR', 'Menú interactivo', $1)`,
+        [req.user.id]
+      )
+      
+      result = await pool.query(`
+        SELECT * 
+        FROM productos
+        WHERE usuario_id = $1
+        ORDER BY created_at ASC
+      `, [req.user.id])
+    }
 
     res.json(result.rows)
 
