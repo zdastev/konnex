@@ -40,10 +40,11 @@ const getUpcomingAgenda = async (req, res) => {
         WHERE a.completado = FALSE
           AND a.fecha >= $1
           AND a.fecha <= $2
+          AND c.usuario_id = $3
         ORDER BY a.fecha ASC
-        LIMIT $3
+        LIMIT $4
       `,
-      [fromParam, toParam, lim]
+      [fromParam, toParam, req.user.id, lim]
     )
 
     res.json(result.rows)
@@ -71,10 +72,10 @@ const getAgendaByContacto = async (req, res) => {
         FROM seguimientos_agenda a
         LEFT JOIN contactos c ON a.contacto_id = c.id
         LEFT JOIN productos p ON a.producto_id = p.id
-        WHERE a.contacto_id = $1
+        WHERE a.contacto_id = $1 AND c.usuario_id = $2
         ORDER BY a.fecha ASC
       `,
-      [contacto_id]
+      [contacto_id, req.user.id]
     )
     res.json(result.rows)
   } catch (err) {
@@ -99,15 +100,18 @@ const createAgenda = async (req, res) => {
   }
 
   try {
+    const check = await pool.query('SELECT id FROM contactos WHERE id = $1 AND usuario_id = $2', [contacto_id, req.user.id]);
+    if (check.rows.length === 0) return res.status(403).json({ error: 'No autorizado' });
+
     const result = await pool.query(
       `
         INSERT INTO seguimientos_agenda
-          (contacto_id, producto_id, fecha, tipo, notas, completado, updated_at)
+          (contacto_id, producto_id, fecha, tipo, notas, completado, updated_at, usuario_id)
         VALUES
-          ($1, $2, $3, $4, $5, FALSE, NOW())
+          ($1, $2, $3, $4, $5, FALSE, NOW(), $6)
         RETURNING *
       `,
-      [contacto_id, producto_id || null, fechaIso, tipo, notas || '']
+      [contacto_id, producto_id || null, fechaIso, tipo, notas || '', req.user.id]
     )
 
     res.status(201).json(result.rows[0])
@@ -137,7 +141,7 @@ const updateAgenda = async (req, res) => {
           completado = COALESCE($4, completado),
           producto_id = COALESCE($5, producto_id),
           updated_at = NOW()
-        WHERE id = $6
+        WHERE id = $6 AND usuario_id = $7
         RETURNING *
       `,
       [
@@ -146,7 +150,8 @@ const updateAgenda = async (req, res) => {
         typeof notas === 'string' ? notas : null,
         typeof completado === 'boolean' ? completado : null,
         producto_id || null,
-        id
+        id,
+        req.user.id
       ]
     )
 
@@ -163,7 +168,7 @@ const updateAgenda = async (req, res) => {
 const deleteAgenda = async (req, res) => {
   const { id } = req.params
   try {
-    await pool.query('DELETE FROM seguimientos_agenda WHERE id = $1', [id])
+    await pool.query('DELETE FROM seguimientos_agenda WHERE id = $1 AND usuario_id = $2', [id, req.user.id])
     res.json({ message: 'Seguimiento eliminado' })
   } catch (err) {
     res.status(500).json({ error: err.message })

@@ -2,7 +2,7 @@ const { pool } = require('../config/database')
 
 const getCategorias = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM categorias ORDER BY created_at ASC')
+    const result = await pool.query('SELECT * FROM categorias WHERE usuario_id = $1 ORDER BY created_at ASC', [req.user.id])
     res.json(result.rows)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -41,7 +41,7 @@ const updateCategoria = async (req, res) => {
 const deleteCategoria = async (req, res) => {
   const { id } = req.params
   try {
-    await pool.query('DELETE FROM categorias WHERE id = $1', [id])
+    await pool.query('DELETE FROM categorias WHERE id = $1 AND usuario_id = $2', [id, req.user.id])
     res.json({ message: 'Categoría eliminada' })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -60,10 +60,10 @@ const getProductosByCategoria = async (req, res) => {
           p.descripcion
         FROM categoria_productos cp
         INNER JOIN productos p ON p.id = cp.producto_id
-        WHERE cp.categoria_id = $1
+        WHERE cp.categoria_id = $1 AND p.usuario_id = $2
         ORDER BY p.created_at ASC
       `,
-      [id]
+      [id, req.user.id]
     )
 
     res.json(result.rows)

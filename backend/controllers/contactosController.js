@@ -16,9 +16,9 @@ const getContactos = async (req, res) => {
         c.created_at
       FROM contactos c
       LEFT JOIN categorias cat ON c.categoria_id = cat.id
-      WHERE 1=1
+      WHERE c.usuario_id = $1
     `
-    const params = []
+    const params = [req.user.id]
 
     if (categoria_id) {
       params.push(categoria_id)
@@ -64,8 +64,8 @@ const getContactoById = async (req, res) => {
         c.created_at
       FROM contactos c
       LEFT JOIN categorias cat ON c.categoria_id = cat.id
-      WHERE c.id = $1
-    `, [id])
+      WHERE c.id = $1 AND c.usuario_id = $2
+    `, [id, req.user.id])
 
     if (contacto.rows.length === 0) return res.status(404).json({ error: 'Contacto no encontrado' })
 
@@ -98,7 +98,7 @@ const createContacto = async (req, res) => {
     const result = await pool.query(
       `INSERT INTO contactos (nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [nombre_negocio, whatsapp, ubicacion, tiene_web || false, categoria_id]
+      [nombre_negocio, whatsapp, ubicacion, tiene_web || false, categoria_id, req.user.id]
     )
     res.status(201).json(result.rows[0])
   } catch (err) {
@@ -113,8 +113,8 @@ const updateContacto = async (req, res) => {
     const result = await pool.query(
       `UPDATE contactos 
        SET nombre_negocio = $1, whatsapp = $2, ubicacion = $3, tiene_web = $4, categoria_id = $5
-       WHERE id = $6 RETURNING *`,
-      [nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id, id]
+       WHERE id = $6 AND usuario_id = $7 RETURNING *`,
+      [nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id, id, req.user.id]
     )
     if (result.rows.length === 0) return res.status(404).json({ error: 'Contacto no encontrado' })
     res.json(result.rows[0])
@@ -126,7 +126,7 @@ const updateContacto = async (req, res) => {
 const deleteContacto = async (req, res) => {
   const { id } = req.params
   try {
-    await pool.query('DELETE FROM contactos WHERE id = $1', [id])
+    await pool.query('DELETE FROM contactos WHERE id = $1 AND usuario_id = $2', [id, req.user.id])
     res.json({ message: 'Contacto eliminado' })
   } catch (err) {
     res.status(500).json({ error: err.message })

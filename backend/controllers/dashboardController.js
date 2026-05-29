@@ -13,9 +13,10 @@ const getEstadosPorProducto = async (req, res) => {
       FROM productos p
       LEFT JOIN estados_contacto e
         ON e.producto_id = p.id
+      WHERE p.usuario_id = $1
       GROUP BY p.id, p.nombre
       ORDER BY p.created_at ASC
-    `)
+    `, [req.user.id])
 
     res.json(result.rows)
   } catch (err) {
@@ -34,8 +35,9 @@ const getKanbanBoard = async (req, res) => {
       FROM contactos c
       LEFT JOIN categorias cat ON c.categoria_id = cat.id
       LEFT JOIN estados_contacto e ON c.id = e.contacto_id AND e.producto_id = $1
+      WHERE c.usuario_id = $2
       ORDER BY c.created_at DESC
-    `, [producto_id]);
+    `, [producto_id, req.user.id]);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -52,9 +54,9 @@ const getTareasHoy = async (req, res) => {
       FROM seguimientos_agenda a
       JOIN contactos c ON a.contacto_id = c.id
       LEFT JOIN productos p ON a.producto_id = p.id
-      WHERE a.completado = false AND DATE(a.fecha) <= CURRENT_DATE
+      WHERE a.completado = false AND DATE(a.fecha) <= CURRENT_DATE AND c.usuario_id = $1
       ORDER BY a.fecha ASC
-    `);
+    `, [req.user.id]);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -62,4 +64,3 @@ const getTareasHoy = async (req, res) => {
 }
 
 module.exports = { getEstadosPorProducto, getKanbanBoard, getTareasHoy }
-
