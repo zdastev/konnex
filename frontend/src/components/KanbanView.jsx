@@ -143,13 +143,13 @@ export default function KanbanView() {
       {loading ? (
         <p>Cargando tablero...</p>
       ) : (
-        <div className="flex gap-6 overflow-x-auto pb-4 flex-1">
+        <div className="flex gap-3 overflow-x-auto pb-2" style={{ height: 'calc(100vh - 200px)' }}>
           {Object.entries(ESTADO_LABELS).map(([estadoKey, label]) => {
             const columna = getColumna(estadoKey)
             return (
               <div 
                 key={estadoKey} 
-                className={`flex-1 min-w-[260px] rounded-2xl p-4 flex flex-col border ${ESTADO_BG[estadoKey]} ${ESTADO_BORDER[estadoKey]}`}
+                className={`flex-1 min-w-0 w-0 rounded-2xl p-3 flex flex-col border ${ESTADO_BG[estadoKey]} ${ESTADO_BORDER[estadoKey]}`}
                 onDragOver={onDragOver}
                 onDrop={(e) => onDrop(e, estadoKey)}
               >
@@ -160,15 +160,15 @@ export default function KanbanView() {
                   </span>
                 </div>
                 
-                <div className="flex-1 flex flex-col gap-3">
+                <div className="flex-1 overflow-y-auto flex flex-col gap-2 pr-1">
                   {columna.map(c => (
                     <div 
                       key={c.contacto_id}
                       draggable
                       onDragStart={(e) => onDragStart(e, c.contacto_id, estadoKey)}
-                      className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing hover:shadow-md transition"
+                      className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing hover:shadow-md transition"
                     >
-                      <h4 className="font-semibold text-gray-900">{c.nombre_negocio}</h4>
+                      <h4 className="font-semibold text-gray-900 text-sm leading-tight">{c.nombre_negocio}</h4>
                       {c.categoria_nombre && (
                         <span className="text-xs text-gray-400 block mt-0.5">{c.categoria_nombre}</span>
                       )}
