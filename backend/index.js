@@ -26,6 +26,7 @@ const agendaRoutes = require('./routes/agenda')
 const backupRoutes = require('./routes/backup')
 const authMiddleware = require('./middleware/auth')
 const { ensureAgendaTables } = require('./config/ensureAgendaTables')
+const { ensureUsuariosTable } = require('./config/ensureUsuariosTable')
 
 // Ruta pública
 app.use('/api/auth', authRoutes)
@@ -40,7 +41,10 @@ app.use('/api/dashboard', authMiddleware, dashboardRoutes)
 app.use('/api/agenda', authMiddleware, agendaRoutes)
 app.use('/api/backup', authMiddleware, backupRoutes)
 
-// Asegura que las tablas de agenda existan (modo dev / auto-contenido).
+// Asegura que las tablas necesarias existan (modo dev / auto-contenido).
+ensureUsuariosTable().catch(err => {
+  console.error('Error asegurando tabla de usuarios:', err.message)
+})
 ensureAgendaTables().catch(err => {
   console.error('Error asegurando tablas de agenda:', err.message)
 })
