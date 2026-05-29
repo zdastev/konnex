@@ -39,7 +39,7 @@ export default function AuthView({ onLogin }) {
     <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-10 w-full max-w-md">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-1">Konnex</h1>
-        <p className="text-gray-500 mb-8">{modo === 'login' ? 'Iniciá sesión para continuar' : 'Creá tu cuenta'}</p>
+        <p className="text-gray-500 mb-8">{modo === 'login' ? 'Iniciá sesión para continuar' : 'Crea tu cuenta'}</p>
 
         {modo === 'register' && (
           <input
@@ -76,12 +76,12 @@ export default function AuthView({ onLogin }) {
         </button>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          {modo === 'login' ? '¿No tenés cuenta?' : '¿Ya tenés cuenta?'}{' '}
+          {modo === 'login' ? '¿No tenés cuenta?' : '¿Ya tiens cuenta?'}{' '}
           <button
             className="text-blue-600 font-semibold hover:underline"
             onClick={() => { setModo(modo === 'login' ? 'register' : 'login'); setError('') }}
           >
-            {modo === 'login' ? 'Registrate' : 'Iniciá sesión'}
+            {modo === 'login' ? 'Registrate' : 'Inicia sesión'}
           </button>
         </p>
       </div>
