@@ -7,7 +7,7 @@ const VISTAS = [
   { id: 'sin_web', label: 'Sin página web' }
 ]
 
-function Sidebar({ vistaActiva, onNavigate }) {
+function Sidebar({ vistaActiva, onNavigate, onLogout }) {
   return (
     <aside className="w-64 h-screen bg-[#0B0F19] border-r border-[#1F2937] p-6 flex-shrink-0 sticky top-0 text-white shadow-2xl flex flex-col">
       <div className="mb-10">
@@ -37,7 +37,14 @@ function Sidebar({ vistaActiva, onNavigate }) {
           )
         })}
       </nav>
-      
+
+      <button
+        type="button"
+        onClick={onLogout}
+        className="mt-4 w-full text-left px-4 py-2.5 rounded-xl transition-all font-medium flex items-center gap-3 text-gray-500 hover:bg-red-500/10 hover:text-red-400 border border-transparent"
+      >
+        Cerrar sesión
+      </button>
     </aside>
   )
 }

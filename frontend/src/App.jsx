@@ -16,6 +16,7 @@ import ProductosView from './components/ProductosView'
 import KanbanView from './components/KanbanView'
 import ExcelImporter from './components/ExcelImporter'
 import ExcelExporter from './components/ExcelExporter'
+import AuthView from './components/AuthView'
 
 const ESTADO_LABELS = {
   sin_contactar: 'Sin contactar',
@@ -43,7 +44,7 @@ const TITULOS = {
   }
 }
 
-function App() {
+function MainApp({ onLogout }) {
   const [vistaActiva, setVistaActiva] = useState('dashboard')
 
   const [contactos, setContactos] = useState([])
@@ -66,12 +67,9 @@ function App() {
 
   const buildParams = (extra = {}) => {
     const params = {}
-
     if (filtroWeb === 'con') params.tiene_web = true
     else if (filtroWeb === 'sin') params.tiene_web = false
-
     if (busqueda.trim() !== '') params.q = busqueda.trim()
-
     return { ...params, ...extra }
   }
 
@@ -114,7 +112,6 @@ function App() {
         setDashboardLoading(true)
         const data = await fetchEstadosPorProducto()
         setEstadosPorProducto(data)
-        
         try {
           const tareas = await fetchTareasHoy()
           setTareasHoy(tareas)
@@ -127,7 +124,6 @@ function App() {
         setDashboardLoading(false)
       }
     }
-
     loadDashboard()
   }, [vistaActiva])
 
@@ -143,7 +139,6 @@ function App() {
         setAgendaLoading(false)
       }
     }
-
     loadUpcoming()
   }, [])
 
@@ -172,7 +167,6 @@ function App() {
   const handleEliminar = async (e, id) => {
     e.stopPropagation()
     if (!window.confirm('¿Eliminar este contacto?')) return
-
     try {
       await deleteContacto(id)
       if (contactoSeleccionado?.id === id) setContactoSeleccionado(null)
@@ -212,7 +206,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#f5f7fa] text-[#1f2937]">
       <div className="flex">
-        <Sidebar vistaActiva={vistaActiva} onNavigate={handleNavigate} />
+        <Sidebar vistaActiva={vistaActiva} onNavigate={handleNavigate} onLogout={onLogout} />
 
         <main className="flex-1 p-10 min-w-0">
           {vistaActiva === 'categorias' ? (
@@ -276,20 +270,23 @@ function App() {
                               <div className="text-xs font-medium text-red-500 mt-1">Fecha programada: {new Date(tarea.fecha).toLocaleString()}</div>
                             </div>
                             <div className="flex items-center gap-3">
-                              {tarea.whatsapp && (
-                                <a 
-                                  href={`https://wa.me/${tarea.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${tarea.nombre_negocio}, soy Steven. Te escribo para dar seguimiento a nuestra plática. ¿Cómo estás?`)}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg text-sm font-medium transition"
-                                >
-                                  WhatsApp
-                                </a>
-                              )}
-                              <button 
+{tarea.whatsapp && (
+  <a
+    href={`https://wa.me/${tarea.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+      `Hola ${tarea.nombre_negocio}, soy Steven. Te escribo para dar seguimiento a nuestra plática. ¿Cómo estás?`
+    )}`}
+    target="_blank"
+    rel="noreferrer"
+    className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg text-sm font-medium transition"
+  >
+    WhatsApp
+  </a>
+)}
+                              <button
                                 onClick={async () => {
                                   await updateAgendaItem(tarea.id, { completado: true })
-                                  loadDashboard()
+                                  const tareas = await fetchTareasHoy()
+                                  setTareasHoy(tareas)
                                 }}
                                 className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-sm font-medium transition"
                               >
@@ -482,6 +479,24 @@ function App() {
       />
     </div>
   )
+}
+
+function App() {
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem('konnex_token')
+    return token ? { token } : null
+  })
+
+  const handleLogin = (userData) => setUser(userData)
+
+  const handleLogout = () => {
+    localStorage.removeItem('konnex_token')
+    setUser(null)
+  }
+
+  if (!user) return <AuthView onLogin={handleLogin} />
+
+  return <MainApp onLogout={handleLogout} />
 }
 
 export default App

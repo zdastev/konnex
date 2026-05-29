@@ -355,3 +355,14 @@ export const fetchBackup = async () => {
 
   return response.json()
 }
+const authFetch = (url, options = {}) => {
+  const token = localStorage.getItem('konnex_token')
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers
+    }
+  })
+}
