@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
-import { createContacto, fetchCategorias, createCategoria } from '../services/api'
+import { upsertContacto, fetchCategorias, createCategoria } from '../services/api'
 
 export default function ExcelImporter({ onImported }) {
   const fileInputRef = useRef(null)
@@ -79,14 +79,18 @@ export default function ExcelImporter({ onImported }) {
         }
 
         if (nombre) {
-          await createContacto({
-            nombre_negocio: String(nombre),
-            whatsapp: whatsapp ? String(whatsapp) : null,
-            ubicacion: ubicacion ? String(ubicacion) : null,
-            tiene_web: tieneWeb,
-            categoria_id: finalCatId
-          })
-          creados++
+          try {
+            await upsertContacto({
+              nombre_negocio: String(nombre),
+              whatsapp: whatsapp ? String(whatsapp) : null,
+              ubicacion: ubicacion ? String(ubicacion) : null,
+              tiene_web: tieneWeb,
+              categoria_id: finalCatId
+            })
+            creados++
+          } catch (err) {
+            console.error(`Error importando ${nombre}:`, err)
+          }
         }
       }
 

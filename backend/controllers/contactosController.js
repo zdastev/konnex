@@ -133,4 +133,26 @@ const deleteContacto = async (req, res) => {
   }
 }
 
-module.exports = { getContactos, getContactoById, createContacto, updateContacto, deleteContacto }
+const upsertContacto = async (req, res) => {
+  const { nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id } = req.body
+  if (!nombre_negocio) return res.status(400).json({ error: 'El nombre del negocio es obligatorio' })
+  try {
+    const result = await pool.query(
+      `INSERT INTO contactos (nombre_negocio, whatsapp, ubicacion, tiene_web, categoria_id, usuario_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (nombre_negocio, usuario_id)
+       DO UPDATE SET
+         whatsapp = EXCLUDED.whatsapp,
+         ubicacion = EXCLUDED.ubicacion,
+         tiene_web = EXCLUDED.tiene_web,
+         categoria_id = EXCLUDED.categoria_id
+       RETURNING *`,
+      [nombre_negocio, whatsapp, ubicacion, tiene_web || false, categoria_id, req.user.id]
+    )
+    res.status(200).json(result.rows[0])
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getContactos, getContactoById, createContacto, updateContacto, deleteContacto, upsertContacto }

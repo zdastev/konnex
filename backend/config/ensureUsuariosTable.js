@@ -19,6 +19,9 @@ const ensureUsuariosTable = async () => {
     ALTER TABLE estados_contacto DROP CONSTRAINT IF EXISTS estados_contacto_estado_check;
     ALTER TABLE estados_contacto ADD CONSTRAINT estados_contacto_estado_check
       CHECK (estado IN ('interesado', 'no_interesa', 'pensandolo', 'sin_contactar', 'contactado'));
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_contactos_nombre_usuario
+      ON contactos (nombre_negocio, usuario_id);
   `)
 }
 
