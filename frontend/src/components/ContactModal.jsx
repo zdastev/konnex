@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { createContacto, updateContacto, fetchCategorias, fetchProductosByCategoria, fetchEstadosByContacto, upsertEstado } from '../services/api'
+import { createContacto, updateContacto, fetchCategorias, fetchProductos, fetchEstadosByContacto, upsertEstado } from '../services/api'
 
 function ContactModal({ open, onClose, onCreated, contacto }) {
   const [categorias, setCategorias] = useState([])
-  const [productosCategoria, setProductosCategoria] = useState([])
+  const [productos, setProductos] = useState([])
   const [productosSeleccionados, setProductosSeleccionados] = useState([])
 
   const emptyForm = {
@@ -19,7 +19,12 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
 
   useEffect(() => {
     if (open) {
-      loadCategorias()
+      fetchCategorias().then(setCategorias).catch(console.error)
+      fetchProductos().then(data => {
+        setProductos(data)
+        if (!contacto) setProductosSeleccionados([])
+      }).catch(console.error)
+
       if (contacto) {
         setFormData({
           nombre_negocio: contacto.nombre_negocio || '',
@@ -28,52 +33,19 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
           categoria_id: contacto.categoria_id || '',
           tiene_web: contacto.tiene_web || false
         })
-        if (contacto.categoria_id) {
-          loadProductosCategoria(contacto.categoria_id, contacto.id)
-        }
+        fetchEstadosByContacto(contacto.id)
+          .then(estados => setProductosSeleccionados(estados.map(e => e.producto_id)))
+          .catch(console.error)
       } else {
         setFormData(emptyForm)
-        setProductosCategoria([])
         setProductosSeleccionados([])
       }
     }
   }, [open, contacto])
 
-  const loadCategorias = async () => {
-    try {
-      const data = await fetchCategorias()
-      setCategorias(data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  const loadProductosCategoria = async (categoria_id, contacto_id = null) => {
-    try {
-      const productos = await fetchProductosByCategoria(categoria_id)
-      setProductosCategoria(productos)
-      if (contacto_id) {
-        const estados = await fetchEstadosByContacto(contacto_id)
-        setProductosSeleccionados(estados.map(e => e.producto_id))
-      } else {
-        setProductosSeleccionados(productos.map(p => p.id))
-      }
-    } catch (error) {
-      console.error(error)
-      setProductosCategoria([])
-      setProductosSeleccionados([])
-    }
-  }
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-    if (name === 'categoria_id' && value) {
-      loadProductosCategoria(value)
-    } else if (name === 'categoria_id' && !value) {
-      setProductosCategoria([])
-      setProductosSeleccionados([])
-    }
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
   const toggleProducto = (id) => {
@@ -86,18 +58,14 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
     e.preventDefault()
     try {
       if (modoEdicion) {
-        // Edición: actualizar contacto + sincronizar estados manualmente
         await updateContacto(contacto.id, formData)
         for (const producto_id of productosSeleccionados) {
           await upsertEstado({ contacto_id: contacto.id, producto_id, estado: 'sin_contactar' })
         }
       } else {
-        // Creación: enviar todo al backend en una sola llamada
         await createContacto({ ...formData, producto_ids: productosSeleccionados })
       }
-
       setFormData(emptyForm)
-      setProductosCategoria([])
       setProductosSeleccionados([])
       onCreated()
       onClose()
@@ -166,19 +134,17 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
               className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-gray-300"
             >
               <option value="">Selecciona una categoría</option>
-              {categorias.map((c) => (
+              {categorias.map(c => (
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
           </div>
 
-          {productosCategoria.length > 0 && (
+          {productos.length > 0 && (
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Productos que necesita esta empresa
-              </label>
+              <label className="block text-sm font-medium mb-2">Productos que necesita</label>
               <div className="space-y-2">
-                {productosCategoria.map(p => (
+                {productos.map(p => (
                   <label key={p.id} className="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
                     <input
                       type="checkbox"
@@ -209,7 +175,7 @@ function ContactModal({ open, onClose, onCreated, contacto }) {
 
           <button
             type="submit"
-            disabled={productosCategoria.length > 0 && productosSeleccionados.length === 0}
+            disabled={productosSeleccionados.length === 0}
             className="w-full bg-[#111827] text-white py-3 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-40"
           >
             {modoEdicion ? 'Guardar cambios' : 'Guardar contacto'}
